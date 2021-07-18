@@ -1,5 +1,21 @@
 pub mod turn_buttle {
 
+    #[derive(Debug)]
+    enum RPGTurnButtleError {
+        CharacterValidationError(String),
+    }
+
+    impl std::fmt::Display for RPGTurnButtleError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            use self::RPGTurnButtleError::*;
+            match self {
+                CharacterValidationError(message) => write!(formatter, "CharacterValidationError: {}", message),
+            }
+        }
+    }
+    
+    impl std::error::Error for RPGTurnButtleError {} 
+
     #[derive(Clone)]
     struct Object {
         collision_detection: bool,
@@ -13,10 +29,22 @@ pub mod turn_buttle {
         }
     }
 
+    #[derive(Debug, Clone)]
+    struct CharaName(String);
+
+    impl CharaName {
+        fn new(chara_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
+            if chara_name.chars().count() > 20 {
+                Err(RPGTurnButtleError::CharacterValidationError(String::from("キャラクタ名は20文字までです")))?
+            }
+            Ok(Self(chara_name.to_string()))
+        }
+    }
+
     #[derive(Clone)]
     struct Character {
         object_feature: Object,
-        chara_name: String,
+        chara_name: CharaName,
         hp: i16,
         attack: i16,
         defence: i16,
@@ -24,10 +52,10 @@ pub mod turn_buttle {
     }
 
     impl Character {
-        fn new(name: String, hp: i16, attack: i16, defence: i16) -> Self {
+        fn new(name: &str, hp: i16, attack: i16, defence: i16) -> Self {
             Self {
                 object_feature: Object::new(true),
-                chara_name: name,
+                chara_name: CharaName::new(name).unwrap(),
                 hp,
                 attack,
                 defence,
@@ -105,8 +133,8 @@ pub mod turn_buttle {
     }
 
     pub fn yamasaki_buttle() {
-        let player_chara = Character::new(String::from("akechi mitsuhide"), 100, 30, 10);
-        let enemy_chara = Character::new(String::from("hashiba hideyoshi"), 80, 40, 0);
+        let player_chara = Character::new("akechi mitsuhide", 100, 30, 10);
+        let enemy_chara = Character::new("hashiba hideyoshi", 80, 40, 0);
         let mut buttle_field = ButtleField {
             player_chara: player_chara.clone(),
             enemy_chara: enemy_chara.clone(),
